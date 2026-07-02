@@ -102,6 +102,20 @@
   .upload-label{display:inline-block;margin-top:10px;font-size:12.5px;background:var(--bg);border:1px dashed var(--border);
     border-radius:6px;padding:7px 12px;cursor:pointer;color:var(--text-light);}
   .upload-label input{display:none;}
+  .attach-audio{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;
+    padding:6px 8px;margin-top:8px;max-width:100%;}
+  .attach-audio audio{height:32px;max-width:220px;}
+  .attach-audio .fname{font-size:11px;color:var(--text-light);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .attach-audio .rm{background:#fff5f5;color:#c92a2a;border:1px solid #ffc9c9;border-radius:5px;width:auto;height:auto;
+    padding:2px 7px;font-size:11px;position:static;line-height:1.4;}
+
+  .task-hint{font-size:12px;color:var(--text-light);margin-top:3px;line-height:1.4;}
+  .task-toggle{display:inline-block;font-size:11.5px;background:none;border:none;color:var(--accent);cursor:pointer;
+    padding:4px 0;margin-top:2px;}
+  .task-panel{display:none;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-top:6px;}
+  .task-panel.open{display:block;}
+  .task-panel textarea{min-height:60px;}
+  .task-panel .upload-label{margin-top:8px;padding:5px 10px;font-size:12px;}
 
   table.simple{width:100%;border-collapse:collapse;margin-top:8px;}
   table.simple th,table.simple td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);font-size:13px;}
@@ -153,6 +167,7 @@
 
 /* ============================= DATA ============================= */
 
+var DEFAULT_START_DATE = "2026-07-01";
 var WEEKDAY_CYCLE = ["T2","T3","T4","T5","T6","T7","CN"];
 var WEEK_THEME = {1:"Phá băng miệng", 2:"Meeting muscle", 3:"Demo & pitch", 4:"Interview mode"};
 
@@ -171,8 +186,8 @@ var PROMPTS = {
 };
 
 var CERTS = [
-  {id:"cert1", name:"Google AI Essentials", provider:"Google (Coursera)", week:1},
-  {id:"cert2", name:"Career Essentials in Generative AI", provider:"Microsoft + LinkedIn", week:2},
+  {id:"cert1", name:"Career Essentials in Generative AI", provider:"Microsoft + LinkedIn — miễn phí, không cần thẻ", week:1},
+  {id:"cert2", name:"Google AI Essentials", provider:"Google (Coursera)", week:2},
   {id:"cert3", name:"ChatGPT Prompt Engineering for Developers", provider:"DeepLearning.AI", week:3},
   {id:"cert4", name:"Building with Claude / AI Agents", provider:"Anthropic + LinkedIn Learning (n8n)", week:4}
 ];
@@ -185,6 +200,33 @@ var PROJECTS = [
 
 // task category: 'ai' | 'english' | 'track'
 function T(id,label,cat,prompt){ var o={id:id,label:label,cat:cat}; if(prompt) o.prompt=prompt; return o; }
+
+var HINT_RULES = [
+  [/^ai$/, "Học trên learning.linkedin.com (Microsoft GenAI) hoặc Coursera (Google AI Essentials) — làm hết quiz cuối mỗi module."],
+  [/cefr/, "Vào smalltalk2.me, làm bài test CEFR miễn phí, chụp màn hình lưu kết quả."],
+  [/shadow/, "Xem video trên YouTube (Business English with Christina, TED) hoặc nghe Business English Pod, tạm dừng và nhại lại từng câu."],
+  [/record/, "Dùng Voice Memos (iPhone) / Recorder (Android), hoặc quay trực tiếp trong SmallTalk2Me/Loora để vừa thu vừa được chấm điểm."],
+  [/roleplay|^mock$/, "Mở voice mode của ChatGPT/Claude/Gemini trên điện thoại, dán prompt bên dưới rồi nói trực tiếp qua mic."],
+  [/meeting/, "Dùng voice mode ChatGPT/Claude với prompt bên dưới; nếu có ngân sách, đặt 1 buổi thật trên Cambly/EngVarta."],
+  [/interview/, "Dùng voice mode ChatGPT/Claude với prompt A6; quay lại bằng Loom hoặc điện thoại để xem lại cách trả lời."],
+  [/present/, "Quay video bằng điện thoại hoặc Loom, tập nói không nhìn script, xem lại và tự chấm trước khi quay bản tiếp theo."],
+  [/negotiat|obj/, "Dùng voice mode ChatGPT/Claude với prompt A5, hoặc luyện thử với bạn bè/Cambly."],
+  [/vocab/, "Tạo bộ thẻ trên Anki hoặc Quizlet (spaced repetition), ôn 2 lần/ngày (sáng — tối)."],
+  [/email/, "Viết nháp trên Gmail/Docs, dán prompt A4 vào ChatGPT/Claude để nhờ viết & sửa, rồi dùng Grammarly check lại."],
+  [/scope|build|deploy/, "Dùng ChatGPT/Claude + n8n (n8n.io) để dựng workflow; deploy thử lên Netlify (app.netlify.com/drop hoặc qua GitHub)."],
+  [/portfolio/, "Dán prompt B5 vào ChatGPT/Claude để có bản mô tả, sau đó đăng lên phần Featured của LinkedIn."],
+  [/linkedin|cvupdate|decision|compare/, "Vào linkedin.com/in cập nhật Licenses & Certifications + Featured; đối chiếu lại với CV/JD mục tiêu."],
+  [/elsa/, "Mở app ELSA Speak, chọn đúng âm hay sai của mình, luyện 15–20 phút."],
+  [/weektest|finalinterview|finalpresent|cefrfinal/, "Ghi lại bằng Loom/điện thoại hoặc SmallTalk2Me, dùng voice mode AI để chấm điểm theo rubric."],
+  [/weekreview|monthreview|^note$/, "Viết ngắn gọn: 3 điều làm tốt, 1 điều cần sửa, 1 hành động cho ngày/tuần tới."],
+  [/tracker|certcheck|projectcheck|redo/, "Cập nhật ở trang Chứng chỉ / Project của app này — đổi trạng thái, dán link, upload ảnh."]
+];
+function getHint(t){
+  for(var i=0;i<HINT_RULES.length;i++){ if(HINT_RULES[i][0].test(t.id)) return HINT_RULES[i][1]; }
+  if(t.cat==="english") return "Luyện qua voice mode của ChatGPT/Claude/Gemini, hoặc app Speak/Langua/Talkio.";
+  if(t.cat==="ai") return "Học trên Coursera/LinkedIn Learning, hoặc thực hành trực tiếp với ChatGPT/Claude.";
+  return "Ghi chú/tự đánh giá ngắn gọn ở đây.";
+}
 
 function mkDay(num, theme, morning, noon, evening, kpi, deliverable, tasks){
   return {
@@ -200,12 +242,12 @@ function mkDay(num, theme, morning, noon, evening, kpi, deliverable, tasks){
 
 var PLAN = [
 mkDay(1,"Baseline — phá băng",
-  {text:"Đăng ký Coursera → Google AI Essentials, học xong Module 1–2 + quiz.", prompt:"B1"},
+  {text:"Vào learning.linkedin.com (hoặc Microsoft Learn) → Career Essentials in Generative AI, học xong Module 1–2 + quiz. Miễn phí, học ngay, không cần nhập thẻ.", prompt:"B1"},
   {text:"Cài SmallTalk2Me → làm CEFR test (baseline, chụp màn hình lưu). Shadowing 20' (1 video business English)."},
   {text:"Viết + thu âm self-intro 90 giây (bản 1, xấu cũng được).", prompt:"A1"},
-  "CEFR test xong · AI Essentials ≥ 40% · self-intro bản 1 thu xong.",
+  "CEFR test xong · GenAI course ≥ 40% · self-intro bản 1 thu xong.",
   "Ảnh CEFR score · file ghi âm intro_v1.",
-  [T("ai","Google AI Essentials Module 1–2 + quiz","ai","B1"),
+  [T("ai","Microsoft/LinkedIn GenAI — Module 1–2 (miễn phí, không cần thẻ)","ai","B1"),
    T("cefr","Làm CEFR test SmallTalk2Me (baseline) + chụp màn hình lưu","english"),
    T("shadow","Shadowing 20' (1 video business English)","english"),
    T("record","Thu âm self-intro 90 giây (bản 1)","english","A1"),
@@ -213,12 +255,12 @@ mkDay(1,"Baseline — phá băng",
    T("tracker","Điền Daily Tracker","track")]),
 
 mkDay(2,"Phá băng miệng",
-  {text:"Google AI Essentials Module 3–4 + quiz ≥ 80%.", prompt:"B1"},
+  {text:"Microsoft/LinkedIn GenAI — Module 3–4 + quiz ≥ 80%.", prompt:"B1"},
   {text:"Shadowing 20' + Speaking 30' chủ đề 'your role & company' (dùng chính VNPAY/payments của anh).", prompt:"A1"},
   {text:"Self-intro bản 2 (sửa theo AI feedback). So với bản 1.", prompt:"A1"},
   "Quiz ≥ 80% · speaking 30' · intro_v2 tốt hơn v1.",
   "intro_v2 · note 10 lỗi phát âm hay gặp.",
-  [T("ai","Google AI Essentials Module 3–4 + quiz ≥80%","ai","B1"),
+  [T("ai","Microsoft/LinkedIn GenAI — Module 3–4 + quiz ≥80%","ai","B1"),
    T("shadow","Shadowing 20'","english"),
    T("speak","Speaking 30' chủ đề 'your role & company'","english","A1"),
    T("record","Thu âm self-intro bản 2 (sửa theo feedback)","english","A1"),
@@ -226,12 +268,12 @@ mkDay(2,"Phá băng miệng",
    T("tracker","Điền Daily Tracker","track")]),
 
 mkDay(3,"Phá băng miệng",
-  {text:"Hoàn thành Google AI Essentials + lấy cert (hoặc audit) → điền Certificate Tracker.", prompt:"B1"},
+  {text:"Hoàn thành Microsoft/LinkedIn GenAI + lấy Cert #1 → điền Certificate Tracker.", prompt:"B1"},
   {text:"Shadowing 20' + Small talk role-play 30'. 20 câu small-talk thu âm.", prompt:"A2"},
   {text:"Chốt scope Project 1 (lead-gen + outreach BD) — 1-pager: input, output, tool.", prompt:"B2"},
   "Cert #1 done · 20 câu small-talk phản xạ < 3 giây/câu.",
-  "Cert Google trong tracker · scope Project 1.",
-  [T("ai","Hoàn thành Google AI Essentials + lấy cert #1","ai","B1"),
+  "Cert Microsoft/LinkedIn trong tracker · scope Project 1.",
+  [T("ai","Hoàn thành Microsoft/LinkedIn GenAI + lấy Cert #1","ai","B1"),
    T("shadow","Shadowing 20'","english"),
    T("roleplay","Small talk role-play 30' + thu âm 20 câu","english","A2"),
    T("scope1","Chốt scope Project 1 (1-pager)","ai","B2"),
@@ -239,12 +281,12 @@ mkDay(3,"Phá băng miệng",
    T("tracker","Điền Daily Tracker + Certificate Tracker","track")]),
 
 mkDay(4,"Phá băng miệng",
-  {text:"Bắt đầu Microsoft/LinkedIn Career Essentials in Generative AI (Module 1–2).", prompt:"B1"},
+  {text:"Đăng ký Coursera → Google AI Essentials, bắt đầu Module 1–2.", prompt:"B1"},
   {text:"Shadowing 20' + Speaking 30' chủ đề 'describe your product' (chuẩn bị cho demo tuần 3)."},
   {text:"Mock small-talk với AI voice 15' + tự chấm.", prompt:"A2"},
   "Speaking 30' · mock small-talk không dừng quá 2 lần.",
   "Ghi âm small-talk · điểm tự chấm vào English Tracker.",
-  [T("ai","Career Essentials GenAI Module 1–2","ai","B1"),
+  [T("ai","Google AI Essentials — Module 1–2","ai","B1"),
    T("shadow","Shadowing 20'","english"),
    T("speak","Speaking 30' chủ đề 'describe your product'","english"),
    T("mock","Mock small-talk AI voice 15' + tự chấm","english","A2"),
@@ -252,12 +294,12 @@ mkDay(4,"Phá băng miệng",
    T("tracker","Điền Daily Tracker","track")]),
 
 mkDay(5,"Phá băng miệng",
-  {text:"Career Essentials GenAI Module 3–4 + quiz.", prompt:"B1"},
+  {text:"Google AI Essentials — Module 3–4 + quiz.", prompt:"B1"},
   {text:"Shadowing 20' + role-play 'meeting kick-off' 30' (làm quen cho tuần 2).", prompt:"A3"},
   {text:"Self-intro bản FINAL (bản 3) — thu âm sạch.", prompt:"A1"},
-  "intro_final đạt (nói 2' không đọc script) · GenAI course ≥ 60%.",
+  "intro_final đạt (nói 2' không đọc script) · Google AI Essentials ≥ 60%.",
   "intro_final.mp3.",
-  [T("ai","Career Essentials GenAI Module 3–4 + quiz","ai","B1"),
+  [T("ai","Google AI Essentials — Module 3–4 + quiz","ai","B1"),
    T("shadow","Shadowing 20'","english"),
    T("roleplay","Role-play 'meeting kick-off' 30'","english","A3"),
    T("record","Thu âm self-intro bản FINAL","english","A1"),
@@ -288,29 +330,29 @@ mkDay(7,"Review + nghỉ nhẹ",
 
 /* ---------- WEEK 2 — Meeting muscle ---------- */
 mkDay(8,"Meeting muscle",
-  {text:"Career Essentials GenAI — tiếp tục module + quiz.", prompt:"B1"},
+  {text:"Hoàn thành Google AI Essentials + lấy Cert #2 → điền Certificate Tracker.", prompt:"B1"},
   {text:"Shadowing 20' + Mock meeting 30' vai 'status update'.", prompt:"A3"},
   {text:"Học 15 từ vựng payments/BD (spaced repetition) + viết 1 email công việc.", prompt:"A4"},
-  "Mock meeting phần status update trôi chảy · 15 từ vựng active.",
-  "Ghi âm mock meeting đoạn 1 · email_v1.",
-  [T("ai","Career Essentials GenAI — module tiếp theo + quiz","ai","B1"),
+  "Cert #2 (Google AI Essentials) done · mock meeting phần status update trôi chảy.",
+  "Cert Google trong tracker · ghi âm mock meeting đoạn 1 · email_v1.",
+  [T("ai","Hoàn thành Google AI Essentials + lấy Cert #2","ai","B1"),
    T("shadow","Shadowing 20'","english"),
    T("meeting","Mock meeting 30' vai 'status update'","english","A3"),
    T("vocab15","15 từ vựng payments/BD (spaced repetition)","english"),
    T("email","Viết 1 email công việc","english","A4"),
-   T("tracker","Điền Daily Tracker","track")]),
+   T("tracker","Điền Daily Tracker + Certificate Tracker","track")]),
 
 mkDay(9,"Meeting muscle",
-  {text:"Hoàn thành Career Essentials GenAI + lấy cert #2 → điền Certificate Tracker.", prompt:"B1"},
+  {text:"Ôn lại module yếu nhất của Google AI Essentials (nếu có) + chuẩn bị data mẫu cho Project 1 (danh sách công ty target)."},
   {text:"Shadowing 20' + Mock meeting 30' vai 'hỏi requirement khách'.", prompt:"A3"},
   {text:"Học tiếp 15 từ vựng payments/BD."},
-  "Cert #2 done · mock meeting phần hỏi requirement ổn.",
-  "Cert Microsoft/LinkedIn trong tracker.",
-  [T("ai","Hoàn thành Career Essentials GenAI + lấy cert #2","ai","B1"),
+  "Danh sách công ty mẫu cho Project 1 sẵn sàng · mock meeting phần hỏi requirement ổn.",
+  "File danh sách công ty mẫu · ghi âm mock meeting đoạn 2.",
+  [T("ai","Ôn Google AI Essentials + chuẩn bị data mẫu cho Project 1","ai","B2"),
    T("shadow","Shadowing 20'","english"),
    T("meeting","Mock meeting 30' vai 'hỏi requirement khách'","english","A3"),
    T("vocab15","15 từ vựng payments/BD tiếp theo","english"),
-   T("tracker","Điền Daily Tracker + Certificate Tracker","track")]),
+   T("tracker","Điền Daily Tracker","track")]),
 
 mkDay(10,"Meeting muscle",
   {text:"Build Project 1 (lead-gen + outreach) — dựng workflow n8n/Claude.", prompt:"B2"},
@@ -571,7 +613,7 @@ var TOTAL_DAYS = PLAN.length;
 var LS_KEY = "bootcamp30_state_v1";
 
 function defaultState(){
-  return { version:1, startDate:null, days:{}, certs:{}, projects:{} };
+  return { version:1, startDate:DEFAULT_START_DATE, days:{}, certs:{}, projects:{} };
 }
 
 var state = loadState();
@@ -591,8 +633,16 @@ function saveState(){
 
 function getDayState(num){
   var k = String(num);
-  if(!state.days[k]) state.days[k] = { tasks:{}, note:"" };
+  if(!state.days[k]) state.days[k] = { tasks:{}, note:"", notes:{} };
+  if(!state.days[k].notes) state.days[k].notes = {};
   return state.days[k];
+}
+function getTaskNote(dayNum, taskId){
+  return getDayState(dayNum).notes[taskId] || "";
+}
+function setTaskNote(dayNum, taskId, text){
+  getDayState(dayNum).notes[taskId] = text;
+  saveState();
 }
 
 function getCertState(id){
@@ -901,10 +951,19 @@ function renderDay(num){
   html += '<h2>Checklist</h2><div class="card">';
   day.tasks.forEach(function(t){
     var checked = !!ds.tasks[t.id];
+    var key = day.num+"_"+t.id;
+    var note = getTaskNote(day.num, t.id);
     html += '<div class="task-row'+(checked?" done":"")+'">'+
       '<input type="checkbox" data-task="'+t.id+'" id="task-'+day.num+"-"+t.id+'" '+(checked?"checked":"")+'>'+
       '<div class="task-body"><label for="task-'+day.num+"-"+t.id+'"><span class="task-cat '+t.cat+'">'+t.cat+'</span>'+esc(t.label)+'</label>'+
       (t.prompt? ' <button class="prompt-btn" data-prompt="'+t.prompt+'">Xem prompt '+t.prompt+'</button><div class="prompt-box" id="pb-'+day.num+"-"+t.id+'"></div>':'')+
+      '<div class="task-hint">💡 '+esc(getHint(t))+'</div>'+
+      '<button class="task-toggle" data-panel="'+key+'">📝 Nhập nội dung / minh chứng ▾</button>'+
+      '<div class="task-panel" id="panel-'+key+'">'+
+        '<textarea data-day="'+day.num+'" data-tid="'+t.id+'" placeholder="Dán nội dung, ghi chú, transcript... vào đây">'+esc(note)+'</textarea>'+
+        '<label class="upload-label">+ Thêm file/audio<input type="file" class="task-upload" data-key="'+key+'" accept="image/*,audio/*,.pdf" multiple></label>'+
+        '<div class="attach-grid" id="task-attach-'+key+'"></div>'+
+      '</div>'+
       '</div></div>';
   });
   html += '</div>';
@@ -921,12 +980,33 @@ function renderDay(num){
 
   document.getElementById("main").innerHTML = html;
   renderDayAttachments(day.num);
+  day.tasks.forEach(function(t){ renderTaskAttachments(day.num, t.id); });
 
   document.querySelectorAll('input[type=checkbox][data-task]').forEach(function(cb){
     cb.addEventListener("change", function(){
       ds.tasks[this.getAttribute("data-task")] = this.checked;
       saveState();
       render();
+    });
+  });
+  document.querySelectorAll(".task-toggle").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var panel = document.getElementById("panel-"+this.getAttribute("data-panel"));
+      panel.classList.toggle("open");
+    });
+  });
+  document.querySelectorAll(".task-panel textarea").forEach(function(ta){
+    ta.addEventListener("blur", function(){
+      setTaskNote(this.getAttribute("data-day"), this.getAttribute("data-tid"), this.value);
+    });
+  });
+  document.querySelectorAll(".task-upload").forEach(function(input){
+    input.addEventListener("change", function(e){
+      var key = this.getAttribute("data-key");
+      handleUpload(e.target.files, "task", key, function(){
+        var parts = key.split("_");
+        renderTaskAttachments(parts[0], parts.slice(1).join("_"));
+      });
     });
   });
   document.querySelectorAll(".prompt-btn").forEach(function(btn){
@@ -980,11 +1060,24 @@ function renderDayAttachments(dayNum){
 }
 
 function attachmentHtml(a){
+  if(a.mime && a.mime.indexOf("audio/")===0){
+    return '<div class="attach-audio" data-att="'+a.id+'">'+
+      '<audio controls src="'+a.dataUrl+'"></audio>'+
+      '<span class="fname" title="'+esc(a.name)+'">'+esc(a.name)+'</span>'+
+      '<button class="rm" data-rm="'+a.id+'">Xoá</button></div>';
+  }
   var isImg = a.mime && a.mime.indexOf("image/")===0;
   return '<div class="attach-item" data-att="'+a.id+'">'+
     (isImg? '<img src="'+a.dataUrl+'">' : '<div class="file-chip">📄<br>'+esc(a.name)+'</div>')+
     '<button class="rm" data-rm="'+a.id+'">×</button>'+
     '<div class="fname" title="'+esc(a.name)+'">'+esc(a.name)+'</div></div>';
+}
+function renderTaskAttachments(dayNum, taskId){
+  var grid = document.getElementById("task-attach-"+dayNum+"_"+taskId);
+  if(!grid) return;
+  var items = attachmentsFor("task", dayNum+"_"+taskId);
+  grid.innerHTML = items.map(attachmentHtml).join("") || '';
+  bindAttachmentRemovers(grid);
 }
 function bindAttachmentRemovers(container){
   container.querySelectorAll("[data-rm]").forEach(function(btn){
@@ -1127,7 +1220,7 @@ function bindTrackerCards(kind, items){
 function renderSettings(){
   var html = '<h1>Cài đặt / Backup</h1>';
   html += '<div class="card"><h2 style="margin-top:0;">Ngày bắt đầu</h2>'+
-    '<div class="field"><label>Ngày 1 của kế hoạch</label><input type="date" id="settings-date" value="'+(state.startDate||todayISO())+'"></div>'+
+    '<div class="field"><label>Ngày 1 của kế hoạch</label><input type="date" id="settings-date" value="'+(state.startDate||DEFAULT_START_DATE)+'"></div>'+
     '<button class="primary" id="settings-save-date">Lưu</button></div>';
 
   html += '<div class="card"><h2 style="margin-top:0;">Backup dữ liệu</h2>'+
@@ -1206,13 +1299,13 @@ function showOnboardIfNeeded(){
   var overlay = document.getElementById("onboard-overlay");
   if(!state.startDate){
     overlay.style.display = "flex";
-    document.getElementById("onboard-date").value = todayISO();
+    document.getElementById("onboard-date").value = DEFAULT_START_DATE;
   } else {
     overlay.style.display = "none";
   }
 }
 document.getElementById("onboard-confirm").addEventListener("click", function(){
-  state.startDate = document.getElementById("onboard-date").value || todayISO();
+  state.startDate = document.getElementById("onboard-date").value || DEFAULT_START_DATE;
   saveState();
   document.getElementById("onboard-overlay").style.display = "none";
   render();
