@@ -555,8 +555,71 @@ function loadState(){
   }catch(e){ return defaultState(); }
 }
 
-function saveState(){
+function saveState(skipPush){
+  state.updatedAt = Date.now();
   localStorage.setItem(LS_KEY, JSON.stringify(state));
+  if(!skipPush) scheduleSyncPush();
+}
+
+/* ---- Multi-device sync (Netlify Function + Blobs) ---- */
+var SYNC_PIN_KEY = "bootcamp30_sync_pin";
+var SYNC_ENDPOINT = "/.netlify/functions/state";
+
+function getSyncPin(){ return localStorage.getItem(SYNC_PIN_KEY) || ""; }
+function setSyncPin(pin){ localStorage.setItem(SYNC_PIN_KEY, pin); }
+
+function setSyncStatus(msg){
+  var el = document.getElementById("sync-status");
+  if(el) el.textContent = msg;
+}
+
+function syncPayload(){
+  return {
+    version: state.version, startDate: state.startDate,
+    days: state.days, certs: state.certs, projects: state.projects,
+    updatedAt: state.updatedAt || 0
+  };
+}
+
+function pushSync(){
+  var pin = getSyncPin();
+  if(!pin) return Promise.resolve();
+  return fetch(SYNC_ENDPOINT+"?pin="+encodeURIComponent(pin), {
+    method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify(syncPayload())
+  }).then(function(r){
+    if(!r.ok) throw new Error("push failed");
+    setSyncStatus("Đã đồng bộ lúc "+new Date().toLocaleTimeString());
+  }).catch(function(){ setSyncStatus("Đồng bộ thất bại — kiểm tra mạng."); });
+}
+
+var pushTimer = null;
+function scheduleSyncPush(){
+  if(!getSyncPin()) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(pushSync, 2000);
+}
+
+function pullSync(auto){
+  var pin = getSyncPin();
+  if(!pin) return Promise.resolve();
+  return fetch(SYNC_ENDPOINT+"?pin="+encodeURIComponent(pin))
+    .then(function(r){ if(!r.ok) throw new Error("pull failed"); return r.json(); })
+    .then(function(remote){
+      if(!remote){
+        if(!auto) setSyncStatus("Chưa có dữ liệu đồng bộ cho PIN này — sẽ tạo mới.");
+        return;
+      }
+      var remoteTs = remote.updatedAt || 0;
+      var localTs = state.updatedAt || 0;
+      if(remoteTs > localTs){
+        state = Object.assign(defaultState(), remote);
+        saveState(true);
+        setSyncStatus("Đã tải bản mới hơn từ thiết bị khác lúc "+new Date().toLocaleTimeString());
+        render();
+      } else if(!auto){
+        setSyncStatus("Dữ liệu hiện tại đã là bản mới nhất.");
+      }
+    }).catch(function(){ if(!auto) setSyncStatus("Không tải được dữ liệu đồng bộ — kiểm tra mạng."); });
 }
 
 function getDayState(num){
@@ -1150,6 +1213,13 @@ function renderSettings(){
     '<div class="field"><label>Ngày 1 của kế hoạch</label><input type="date" id="settings-date" value="'+(state.startDate||DEFAULT_START_DATE)+'"></div>'+
     '<button class="primary" id="settings-save-date">Lưu</button></div>';
 
+  html += '<div class="card"><h2 style="margin-top:0;">Đồng bộ đa thiết bị</h2>'+
+    '<p style="color:var(--text-light);font-size:13px;">Nhập cùng 1 mã PIN trên mọi thiết bị (MacBook, tablet, điện thoại) để tự động đồng bộ checklist/ghi chú/trạng thái Cert & Project qua Netlify. '+
+    '<b>Lưu ý:</b> đây không phải mật khẩu bảo mật — ai biết đúng PIN đều đọc/ghi được, nên đặt PIN dài/khó đoán, đừng dùng "1234". Ảnh/audio minh chứng chưa đồng bộ được (dùng Export/Import JSON ở dưới nếu cần chuyển ảnh).</p>'+
+    '<div class="field"><label>Mã PIN đồng bộ</label><input type="text" id="sync-pin" value="'+esc(getSyncPin())+'" placeholder="VD: nguyen-bootcamp-2026"></div>'+
+    '<button class="primary" id="sync-save-btn">Lưu PIN & đồng bộ ngay</button> '+
+    '<span class="empty-hint" id="sync-status" style="margin-left:8px;"></span></div>';
+
   html += '<div class="card"><h2 style="margin-top:0;">Backup dữ liệu</h2>'+
     '<p style="color:var(--text-light);font-size:13px;">Dữ liệu chỉ lưu trong trình duyệt này. Export định kỳ để không mất tiến độ khi đổi máy / xoá cache.</p>'+
     '<button class="pill" id="export-btn">⬇ Export JSON</button> '+
@@ -1167,6 +1237,13 @@ function renderSettings(){
     saveState();
     toast("Đã lưu ngày bắt đầu");
     render();
+  });
+  document.getElementById("sync-save-btn").addEventListener("click", function(){
+    var pin = document.getElementById("sync-pin").value.trim();
+    setSyncPin(pin);
+    if(!pin){ setSyncStatus("Đã bỏ đồng bộ (PIN trống)."); return; }
+    setSyncStatus("Đang đồng bộ...");
+    pullSync(false).then(function(){ return pushSync(); });
   });
   document.getElementById("export-btn").addEventListener("click", exportData);
   document.getElementById("import-input").addEventListener("change", function(e){
@@ -1252,6 +1329,8 @@ function render(){
 }
 
 refreshAttachments().then(function(){
+  return pullSync(true);
+}).then(function(){
   showOnboardIfNeeded();
   render();
 });

@@ -1,0 +1,8 @@
+{
+  "name": "myself",
+  "private": true,
+  "description": "Personal tools. See bootcamp-checklist/ and netlify/functions/ for the bootcamp sync backend.",
+  "dependencies": {
+    "@netlify/blobs": "^10.7.9"
+  }
+}

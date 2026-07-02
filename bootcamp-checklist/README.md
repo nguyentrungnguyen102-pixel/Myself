@@ -14,10 +14,21 @@ Checklist dạng "Notion đơn giản" cho kế hoạch bootcamp 30 ngày (Engli
 
 ## Lưu trữ dữ liệu
 
-Toàn bộ dữ liệu (checklist đã tick, ảnh minh chứng) lưu **trong trình duyệt** (localStorage + IndexedDB) trên máy/máy đang mở — không có server, không đồng bộ nhiều thiết bị.
+Toàn bộ dữ liệu (checklist đã tick, ghi chú, trạng thái Cert/Project, ảnh/audio minh chứng) mặc định lưu **trong trình duyệt** (localStorage + IndexedDB) của từng máy/thiết bị — không có server, không tự thấy nhau giữa các thiết bị nếu chưa bật đồng bộ.
 
-Vào **Cài đặt / Backup** để:
-- **Export JSON**: tải file backup đầy đủ (tick + ảnh) — nên làm định kỳ (ví dụ cuối mỗi tuần).
+### Đồng bộ đa thiết bị (tuỳ chọn)
+
+Vào **Cài đặt** → **Đồng bộ đa thiết bị**, nhập **cùng 1 mã PIN** trên mọi thiết bị muốn dùng chung (MacBook, tablet, điện thoại...). Sau đó:
+- Checklist đã tick, ghi chú, trạng thái Cert/Project, ngày bắt đầu sẽ **tự động đồng bộ** qua 1 Netlify Function + Netlify Blobs (cùng site đang deploy, không cần tài khoản/dịch vụ ngoài).
+- Cơ chế đơn giản: bản nào lưu sau (mới hơn) sẽ thắng khi đồng bộ — hợp với việc 1 người dùng lần lượt trên từng máy, không hợp nếu sửa đồng thời trên 2 máy cùng lúc.
+- **PIN không phải mật khẩu bảo mật thật** — ai biết đúng PIN và tìm ra được endpoint đều đọc/ghi được dữ liệu đó. Vì đây là checklist học tập cá nhân (không nhạy cảm) nên đủ dùng, nhưng nên đặt PIN dài/lạ (không phải "1234").
+- **Ảnh/audio minh chứng chưa nằm trong phần tự đồng bộ** (dễ vượt giới hạn dung lượng) — muốn chuyển ảnh giữa máy thì vẫn dùng Export/Import JSON bên dưới.
+- Không có mạng hoặc chưa nhập PIN → app vẫn chạy bình thường 100% local như cũ, không bị chặn gì cả.
+
+### Backup thủ công
+
+Vào **Cài đặt** → **Backup dữ liệu**:
+- **Export JSON**: tải file backup đầy đủ (tick + ảnh) — nên làm định kỳ (ví dụ cuối mỗi tuần), và là cách duy nhất hiện tại để chuyển ảnh/audio minh chứng giữa các thiết bị.
 - **Import JSON**: khôi phục lại từ file backup (dùng khi đổi máy, đổi trình duyệt, hoặc lỡ xoá cache).
 
 ## Nội dung ngày
