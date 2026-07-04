@@ -9,8 +9,9 @@ Checklist dạng "Notion đơn giản" cho kế hoạch bootcamp 30 ngày (Engli
 3. Mỗi ngày vào đúng trang **Ngày N** ở sidebar, tick các việc đã làm (Sáng — AI / Trưa — English / Tối — Review). Mỗi việc trong checklist luôn có sẵn **gợi ý app/cách làm** (💡) ngay dưới tên việc, và nút **"Xem prompt"** nếu việc đó có prompt A1–A6/B1–B5 đi kèm.
 4. Bấm **"Nhập nội dung / minh chứng ▾"** dưới mỗi việc để mở ô nhập: dán transcript/ghi chú vào textarea, và **upload ảnh hoặc file audio** (ví dụ file ghi âm self-intro) ngay tại việc đó — không cần gom chung một chỗ.
 5. Xem **Dashboard** để theo dõi % hoàn thành, streak, tiến độ từng tuần, và danh sách "Việc tiếp theo" (kể cả việc quá hạn từ ngày trước).
-6. Vào **Chứng chỉ** / **Project** để cập nhật trạng thái, dán link, upload ảnh minh chứng cho 4 chứng chỉ và 3 project AI.
-7. Vào **Thư viện Prompt** để xem/copy toàn bộ prompt A1–A6 (luyện nói) và B1–B5 (luyện AI/project) bất cứ lúc nào.
+6. Vào **Chứng chỉ** / **Project** để cập nhật trạng thái, dán link, upload ảnh minh chứng cho 6 chứng chỉ và 3 project AI.
+7. Vào **Thư viện Prompt** để xem/copy toàn bộ prompt A1–A6/B1–B5 (bản gốc) và C1–C4 (concept drill, Solution Selling pitch, ROI/TCO case study, architecture note — thêm ở bản v2).
+8. Vào **Chuẩn đạt (Skill Matrix)** để xem nguyên văn bảng 10 kỹ năng cần đạt, Course Stack, rule điều chỉnh cuối tuần và KPI chốt 30 ngày của chương trình v2.
 
 ## Lưu trữ dữ liệu
 
@@ -31,6 +32,10 @@ Vào **Cài đặt** → **Backup dữ liệu**:
 - **Export JSON**: tải file backup đầy đủ (tick + ảnh) — nên làm định kỳ (ví dụ cuối mỗi tuần), và là cách duy nhất hiện tại để chuyển ảnh/audio minh chứng giữa các thiết bị.
 - **Import JSON**: khôi phục lại từ file backup (dùng khi đổi máy, đổi trình duyệt, hoặc lỡ xoá cache).
 
-## Nội dung ngày
+## Nội dung ngày (v2 — "Phương án C", nặng đô hơn)
 
-Nội dung 30 ngày dựng theo kế hoạch bootcamp gốc. Tuần 1 (Ngày 1–7) bám sát chi tiết từng ngày trong brief; Tuần 2–4 sinh theo đúng nhịp ngày (Sáng AI / Trưa–Tối English) mà brief mô tả cho từng tuần, có thể không khớp 100% với lịch thực tế — cứ tick theo tiến độ thật của bạn, không cần đúng ngày.
+Nội dung 30 ngày dựng theo `AI_BD_30d_Schedule_v2.md`: Tuần 1 vẫn ưu tiên English (phá băng miệng), từ Tuần 2 khối AI buổi sáng chuyển hẳn sang **Agents track chuẩn quốc tế** (Hugging Face Agents Course, DeepLearning.AI Agents, Anthropic Academy API+MCP+Agents, Google Cloud GenAI path) thay vì Google/Microsoft Essentials, cộng Solution Selling pitch + ROI/TCO case study ở tuần 4.
+
+Nhãn thứ (T2…CN) và ngày thực tế (dd/mm) hiện ở sidebar/tiêu đề ngày đều **tính theo lịch thật** từ ngày bắt đầu (mặc định 01/07/2026 = Thứ Tư) — đổi ngày bắt đầu ở Cài đặt thì toàn bộ nhãn thứ tự cập nhật lại đúng theo lịch thật.
+
+**Dữ liệu đã hoàn thành ở lịch cũ được giữ nguyên:** Ngày 1 phần CEFR baseline + self-intro (đã tick trước đó) không bị mất khi cập nhật, vì các việc đó dùng chung id với bản trước; Cert Microsoft/LinkedIn GenAI vẫn còn trong trang Chứng chỉ (ghi chú "đã hoàn thành — giữ làm portfolio") dù chương trình mới không còn bắt buộc khoá đó nữa.

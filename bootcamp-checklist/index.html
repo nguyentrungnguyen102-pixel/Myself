@@ -168,7 +168,7 @@
 /* ============================= DATA ============================= */
 
 var DEFAULT_START_DATE = "2026-07-01";
-var WEEKDAY_CYCLE = ["T2","T3","T4","T5","T6","T7","CN"];
+var WEEKDAY_CYCLE_REAL = ["CN","T2","T3","T4","T5","T6","T7"]; // indexed by Date.getDay(): 0=Sun...6=Sat
 var WEEK_THEME = {1:"Phá băng miệng", 2:"Meeting muscle", 3:"Demo & pitch", 4:"Interview mode"};
 
 var PROMPTS = {
@@ -182,26 +182,83 @@ var PROMPTS = {
   B2:{group:"AI", title:"B2 — Project 1 architect (lead-gen)", text:"Design a no-code/low-code lead-gen + outreach workflow for a fintech BD. Inputs: company list. Outputs: enriched profile + personalized outreach. Use n8n + an LLM. Give me the node-by-node build and the exact prompts each step needs."},
   B3:{group:"AI", title:"B3 — Project 2 (proposal/RFP)", text:"Build a proposal generator: input = client brief + our capability doc, output = structured proposal. Give the system prompt, the template sections, and how to keep it factual (no hallucinated claims)."},
   B4:{group:"AI", title:"B4 — Project 3 (data dashboard)", text:"I have a CSV of [transactions/pricing]. Give me a Python + HTML dashboard plan (charts, filters, auto-insights) I can deploy on Netlify. Then write the code file by file."},
-  B5:{group:"AI", title:"B5 — Portfolio writer", text:"Turn this project into a portfolio entry: problem → approach → result, in the voice of a BD person selling their AI skills to a hiring manager. Under 120 words. [paste notes]"}
+  B5:{group:"AI", title:"B5 — Portfolio writer", text:"Turn this project into a portfolio entry: problem → approach → result, in the voice of a BD person selling their AI skills to a hiring manager. Under 120 words. [paste notes]"},
+  C1:{group:"AI", title:"C1 — Concept drill (20 AI Foundation terms)", text:"You are an AI/ML interviewer. Quiz me by asking me to explain, one at a time and in my own words, each of these 20 concepts: LLM, Transformer, Token, Context Window, Embedding, RAG, Function Calling, Agent, MCP, Fine-tuning, Hallucination, Temperature, System Prompt, Vector DB, Chunking, Latency, Cost-per-call, Guardrails, Multimodal, Inference. After each answer, correct any inaccuracy, rate it /10, and give a tighter one-sentence definition I can memorize. Go through all 20 in order, then tell me my 3 weakest."},
+  C2:{group:"AI", title:"C2 — Solution Selling pitch", text:"Act as a skeptical VP of Operations at a mid-size fintech evaluating an AI solution I'm proposing. Let me run a 20-minute Solution Selling pitch structured as Discovery → Demo → Proposal → ROI. Ask discovery questions first, react to my demo description, push back on my proposal, and challenge my ROI numbers. At the end, tell me honestly whether you'd buy, and give me the 3 weakest moments to fix."},
+  C3:{group:"AI", title:"C3 — ROI/TCO case study builder", text:"Help me build an ROI/TCO business case for an AI solution I'd sell to [merchant/company — describe their business]. Walk me through: (1) current cost/inefficiency baseline, (2) total cost of ownership of the AI solution (build + run), (3) expected ROI and payback period, (4) the 3 assumptions a CFO would challenge first. Keep numbers realistic and show the formulas."},
+  C4:{group:"AI", title:"C4 — Architecture note writer", text:"I'll describe a project I built (paste notes below). Write a 1-page architecture note in English for a technical/business hybrid reader: (1) problem, (2) architecture in words, (3) key components and why I chose them, (4) trade-offs I made, (5) what I'd improve with more time. Under 400 words, confident but honest tone. Notes: [___]"}
 };
 
 var CERTS = [
-  {id:"cert1", name:"Career Essentials in Generative AI", provider:"Microsoft + LinkedIn — miễn phí, không cần thẻ", week:1},
-  {id:"cert2", name:"Google AI Essentials", provider:"Google (Coursera)", week:2},
-  {id:"cert3", name:"ChatGPT Prompt Engineering for Developers", provider:"DeepLearning.AI", week:3},
-  {id:"cert4", name:"Building with Claude / AI Agents", provider:"Anthropic + LinkedIn Learning (n8n)", week:4}
+  {id:"cert1", name:"Career Essentials in Generative AI", provider:"Microsoft + LinkedIn — ĐÃ HOÀN THÀNH ở lịch cũ, giữ lại làm portfolio (không còn bắt buộc ở lịch v2)", week:1},
+  {id:"cert2", name:"Google AI Essentials", provider:"Google (Coursera) — không bắt buộc, chỉ lấy nếu xong trong 1 buổi rảnh", week:1},
+  {id:"cert3", name:"AI Agents in LangGraph / Multi-Agent (short courses)", provider:"DeepLearning.AI — free, chuẩn ngôn ngữ JD 2026 (agents)", week:2},
+  {id:"cert4", name:"Anthropic Academy: API + MCP + Agents", provider:"Anthropic — nâng MCP anh đang dùng lên mức giải thích được", week:1},
+  {id:"cert5", name:"Agents Course", provider:"Hugging Face — Certificate, chuẩn quốc tế thật", week:4},
+  {id:"cert6", name:"Intro to Generative AI learning path", provider:"Google Cloud Skills Boost — Badge", week:1}
 ];
 
 var PROJECTS = [
-  {id:"proj1", name:"Project 1 — Lead-gen + Outreach engine (BD)", desc:"Input: danh sách công ty target (merchant/SME/bank). Output: enrichment + email/message outreach cá nhân hóa. Tool: Claude/GPT + n8n.", week:2},
-  {id:"proj2", name:"Project 2 — Proposal / RFP generator", desc:"Input: brief + hồ sơ năng lực. Output: draft proposal/hồ sơ thầu theo template. Tái dùng mảng đấu thầu công & bank-partnership.", week:3},
-  {id:"proj3", name:"Project 3 — Sales / POS data dashboard", desc:"Input: CSV giao dịch/giá. Output: dashboard tương tác + insight tự động. Tái dùng competitive price intel & Python đấu thầu.", week:4}
+  {id:"proj1", name:"Project 1 — Lead-gen + Outreach Agent (có memory)", desc:"n8n + LLM, agent có memory. Input: danh sách công ty target (merchant/SME/bank). Output: enrichment + outreach cá nhân hóa. Đóng gói: GitHub + Notion + video demo + architecture note 1 trang tiếng Anh.", week:2},
+  {id:"proj2", name:"Project 2 — Proposal/RFP Generator + RAG", desc:"RAG đọc hồ sơ năng lực/tài liệu thầu thật (50–100 trang). Input: brief + hồ sơ năng lực. Output: draft proposal/hồ sơ thầu. Đóng gói: GitHub + Notion + video demo + architecture note 1 trang tiếng Anh.", week:3},
+  {id:"proj3", name:"Project 3 — Sales/POS Dashboard + AI insight", desc:"Input: CSV giao dịch/giá. Output: dashboard tương tác + insight tự động bằng AI. Đóng gói: GitHub + Notion + video demo + architecture note 1 trang tiếng Anh.", week:4}
+];
+
+var SKILL_MATRIX = [
+  {skill:"AI Foundation", standard:"Giải thích đúng 20 khái niệm: LLM, Transformer, Token, Context Window, Embedding, RAG, Function Calling, Agent, MCP, Fine-tuning, Hallucination, Temperature, System Prompt, Vector DB, Chunking, Latency, Cost-per-call, Guardrails, Multimodal, Inference", test:"Trả lời miệng 30 phút, đúng ≥90% (Tiểu Nguyên hỏi xoay)", deadline:"Ngày 12"},
+  {skill:"Prompt Engineering", standard:"10 prompt cho 10 use case BD khác nhau", test:"AI trả kết quả đạt ngay lần đầu ≥80%", deadline:"Ngày 14"},
+  {skill:"API", standard:"Gọi được Anthropic/OpenAI API qua Postman: parse JSON, xử lý error, hiểu pricing", test:"Gọi thành công + giải thích cost model", deadline:"Ngày 16"},
+  {skill:"n8n", standard:"3 workflow chạy ổn định", test:"Mỗi workflow chạy 10 lần liên tiếp OK + xử lý 1 error case", deadline:"Ngày 19"},
+  {skill:"AI Agent", standard:"3 agent có memory + tool + RAG", test:"Demo live được cho người khác dùng", deadline:"Ngày 25"},
+  {skill:"RAG", standard:"Chatbot đọc PDF 50–100 trang (tài liệu thầu/năng lực thật)", test:"≥80% đúng trên 20 câu hỏi test", deadline:"Ngày 23"},
+  {skill:"Solution Selling", standard:"Discovery → Demo → Proposal → ROI", test:"Pitch 20 phút bằng tiếng Anh, người nghe hiểu và chấp nhận", deadline:"Ngày 27"},
+  {skill:"ROI/TCO", standard:"Tính ROI, TCO, Payback cho giải pháp AI", test:"1 case study doanh nghiệp thật (chọn 1 merchant cũ)", deadline:"Ngày 26"},
+  {skill:"English (NÓI)", standard:"Trình bày kiến trúc mỗi project 5 phút, không script", test:"Quay video, tự chấm ≥7/10 theo rubric", deadline:"Ngày 27"},
+  {skill:"Portfolio", standard:"3 project public, mỗi cái: GitHub + Notion + video demo + architecture note 1 trang tiếng Anh", test:"Link sống, người lạ hiểu được trong 3 phút", deadline:"Ngày 28"}
+];
+var COURSE_STACK = [
+  {name:"AI Agents in LangGraph / Multi-Agent short courses", provider:"DeepLearning.AI", cert:"Có", why:"Ngôn ngữ JD 2026: agents. Free, uy tín kỹ thuật."},
+  {name:"Agents Course", provider:"Hugging Face", cert:"Certificate", why:"Chuẩn quốc tế thật, dân ngành nhìn là biết."},
+  {name:"Anthropic Academy: API + MCP + Agents", provider:"Anthropic", cert:"Có", why:"Nâng MCP anh đang xài lên mức giải thích được."},
+  {name:"Intro to Generative AI learning path", provider:"Google Cloud Skills Boost", cert:"Badge", why:"Logo Google, tầng sâu hơn Essentials."},
+  {name:"Google AI Essentials (bỏ)", provider:"Coursera", cert:"—", why:"Quá cơ bản — chỉ lấy nếu xong trong 1 buổi rảnh."},
+  {name:"Microsoft GenAI Career Essentials (bỏ)", provider:"LinkedIn", cert:"—", why:"Cùng lý do — đã hoàn thành từ lịch cũ, giữ làm portfolio."}
+];
+var WEEKLY_ADJUST_RULES = [
+  "English Test < 6/10 → tuần sau +30% speaking, giãn deadline 1 project ra ngày đệm.",
+  "Trượt mốc AI 2 ngày liên tiếp → cắt course, giữ project (project là bằng chứng, course là vé).",
+  "Mọi mốc trượt dồn về Ngày 29, không dồn cục cuối tuần 4."
+];
+var FINAL_KPIS = [
+  "Mock interview AI BD 30' tiếng Anh không freeze, tự chấm ≥7/10",
+  "10/10 skill trong bảng chuẩn đạt PASS",
+  "3 project public đủ GitHub + Notion + video + architecture note EN",
+  "Pitch Solution Selling 20' tiếng Anh hoàn chỉnh (đây là thứ phân biệt AI BD với BD thường)",
+  "Đã apply ≥5 JD thật"
 ];
 
 // task category: 'ai' | 'english' | 'track'
 function T(id,label,cat,prompt){ var o={id:id,label:label,cat:cat}; if(prompt) o.prompt=prompt; return o; }
 
 var HINT_RULES = [
+  [/hf\d*/, "Học trên huggingface.co/learn/agents-course (miễn phí) — làm hết unit + quiz, đọc kỹ phần code mẫu."],
+  [/dlai\d*/, "Học trên learn.deeplearning.ai (khoá AI Agents/LangGraph) — free, có video ngắn + code chạy thử ngay."],
+  [/anthropic\d*/, "Học trên anthropic.com (Anthropic Academy) — module API/MCP/Agents, đọc kỹ phần ví dụ code."],
+  [/gcloud\d*/, "Học trên Google Cloud Skills Boost (cloudskillsboost.google) — Intro to Generative AI learning path."],
+  [/concept\d*/, "Đọc định nghĩa rồi tự giải thích lại bằng lời mình (nói to hoặc ghi âm); test lại bằng prompt C1 (Concept drill) với ChatGPT/Claude."],
+  [/foundationtest/, "Luyện trước nhiều lần bằng prompt C1 (Concept drill) với ChatGPT/Claude rồi mới thi thật (Tiểu Nguyên hỏi xoay)."],
+  [/apitest|^api\d*$/, "Dùng Postman (postman.com): gửi request tới API Anthropic/OpenAI, đọc JSON response, thử 1 case lỗi (sai key/param), đọc kỹ trang pricing để hiểu cost model."],
+  [/n8ntest/, "Mở n8n.io, chạy lại từng workflow 10 lần liên tiếp, cố tình đưa 1 input sai để test error handling."],
+  [/prompttest/, "Soạn 10 prompt cho 10 tình huống BD khác nhau, thử trực tiếp trên ChatGPT/Claude, ghi lại % đạt ngay lần đầu."],
+  [/rag/, "Build bằng LangChain/LlamaIndex (hoặc n8n + vector DB) trên chính tài liệu thầu/năng lực thật; soạn sẵn 20 câu hỏi test để chấm % đúng."],
+  [/agenttest/, "Demo trực tiếp qua Zoom/Meet hoặc gặp mặt cho 1 người thật dùng thử agent, ghi lại phản hồi thật của họ."],
+  [/roicase/, "Dùng prompt C3 (ROI/TCO case study) với ChatGPT/Claude, chọn 1 merchant cũ có số liệu thật của anh."],
+  [/pitch/, "Dùng prompt C2 (Solution Selling pitch) qua voice mode ChatGPT/Claude, quay lại bằng Loom/điện thoại."],
+  [/architecture/, "Dùng prompt C4 (Architecture note) với ChatGPT/Claude, dán ghi chú project vào rồi biên tập lại."],
+  [/githubpublic/, "Vào github.com, đổi từng repo sang Public, viết README rõ ràng (cài đặt, cách chạy, demo link)."],
+  [/^apply$/, "Lọc JD 'AI BD'/'Business Development AI' trên LinkedIn/VietnamWorks/TopCV (VN/SG remote), gửi hồ sơ kèm link portfolio."],
+  [/videodemo/, "Quay bằng điện thoại hoặc Loom, mỗi project 3–5 phút, nói tiếng Anh không đọc script."],
+  [/interviewscript|weakspot|catchup/, "Xem lại Weekly Review/Monthly Review gần nhất để biết chính xác cần luyện gì, rồi lặp lại đúng phần yếu đó."],
   [/^ai$/, "Học trên learning.linkedin.com (Microsoft GenAI) hoặc Coursera (Google AI Essentials) — làm hết quiz cuối mỗi module."],
   [/cefr/, "Vào smalltalk2.me, làm bài test CEFR miễn phí, chụp màn hình lưu kết quả."],
   [/shadow/, "Xem video trên YouTube (Business English with Christina, TED) hoặc nghe Business English Pod, tạm dừng và nhại lại từng câu."],
@@ -233,7 +290,6 @@ function mkDay(num, theme, morning, english, milestone, tasks){
   return {
     num:num,
     week: Math.min(4, Math.ceil(num/7)),
-    weekday: WEEKDAY_CYCLE[(num-1)%7],
     theme:theme,
     morning:morning, english:english,
     milestone:milestone,
@@ -241,296 +297,291 @@ function mkDay(num, theme, morning, english, milestone, tasks){
   };
 }
 function blockHours(day){
-  var isWeekend = day.weekday==="T7" || day.weekday==="CN";
-  return isWeekend ? {morning:"Sáng (nhẹ)", english:"Trưa + Tối (2–4h)"} : {morning:"Sáng (3h)", english:"Trưa + Tối (3h)"};
+  return {morning:"Sáng (3h)", english:"Trưa + Tối (3h)"};
 }
-function dateForDay(num){
+function realDateForDay(num){
   var start = new Date((state.startDate||DEFAULT_START_DATE)+"T00:00:00");
   start.setDate(start.getDate() + (num-1));
-  return String(start.getDate()).padStart(2,"0")+"/"+String(start.getMonth()+1).padStart(2,"0");
+  return start;
+}
+function dateForDay(num){
+  var d = realDateForDay(num);
+  return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0");
+}
+function weekdayForDay(num){
+  var d = realDateForDay(num).getDay(); // 0=CN,1=T2,...6=T7
+  return WEEKDAY_CYCLE_REAL[d];
 }
 
 var PLAN = [
 mkDay(1,"Baseline",
-  {text:"Microsoft/LinkedIn GenAI — Module 1–2 + quiz. Miễn phí, học ngay, không cần nhập thẻ.", prompt:"B1"},
-  {text:"CEFR test (baseline, chụp màn hình lưu) · Shadowing 20' · Học 10 từ nối tiếng Anh (connector) đầu tiên · Thu âm self-intro 90 giây (bản 1).", prompt:"A1"},
-  "Ảnh CEFR + intro_v1.",
-  [T("ai","Microsoft/LinkedIn GenAI — Module 1–2 (miễn phí, không cần thẻ)","ai","B1"),
-   T("cefr","Làm CEFR test SmallTalk2Me (baseline) + chụp màn hình lưu","english"),
-   T("shadow","Shadowing 20' (1 video business English)","english"),
-   T("connector","Học 10 từ nối tiếng Anh đầu tiên (however, in addition, as a result...)","english"),
-   T("record","Thu âm self-intro 90 giây (bản 1)","english","A1"),
+  {text:"~~Google Essentials~~ (bỏ) → Đăng ký cả 4 course mới (HF Agents Course, DeepLearning.AI Agents, Anthropic Academy, Google Cloud Skills Boost) + học Hugging Face Agents Course Unit 0–1.", prompt:""},
+  {text:"✅ ĐÃ XONG: CEFR 47 (B1) baseline + thu âm self-intro (intro_v1).", prompt:"A1"},
+  "Ảnh CEFR + intro_v1 ✅.",
+  [T("hf","Đăng ký 4 course mới + học Hugging Face Agents Course Unit 0–1","ai"),
+   T("cefr","CEFR baseline test — ĐÃ XONG (47, B1)","english"),
+   T("record","Thu âm self-intro bản 1 (intro_v1) — ĐÃ XONG","english","A1"),
    T("tracker","Điền Daily Tracker","track")]),
 
 mkDay(2,"Self-intro",
-  {text:"Microsoft/LinkedIn GenAI — Module 3–4 (quiz ≥80%).", prompt:"B1"},
-  {text:"Shadowing 20' · Speaking 30' (role & company) · Self-intro bản 2 (sửa theo feedback).", prompt:"A1"},
+  {text:"Hugging Face Agents Course Unit 1 (tiếp) + note 5 khái niệm đầu: LLM, Token, Context Window, Temperature, System Prompt.", prompt:"C1"},
+  {text:"Speaking 30' (chủ đề role & company, làm 3 bản A/B/C) + thu âm intro_v2.", prompt:"A1"},
   "intro_v2 + note lỗi âm.",
-  [T("ai","Microsoft/LinkedIn GenAI — Module 3–4 (quiz ≥80%)","ai","B1"),
-   T("shadow","Shadowing 20'","english"),
-   T("speak","Speaking 30' chủ đề 'your role & company'","english","A1"),
-   T("record","Thu âm self-intro bản 2 (sửa theo feedback)","english","A1"),
+  [T("hf2","HF Agents Course — Unit 1 (tiếp)","ai"),
+   T("concept1","Note 5 khái niệm: LLM, Token, Context Window, Temperature, System Prompt","ai","C1"),
+   T("speak","Speaking 30' chủ đề role & company (3 bản A/B/C)","english","A1"),
+   T("record2","Thu âm self-intro bản 2 (intro_v2)","english","A1"),
    T("tracker","Điền Daily Tracker","track")]),
 
 mkDay(3,"Small talk",
-  {text:"Microsoft/LinkedIn GenAI xong → Cert #1.", prompt:"B1"},
-  {text:"Shadowing 20' · Small-talk role-play 30' (20 câu, thu âm).", prompt:"A2"},
-  "Cert Microsoft/LinkedIn · scope Project 1.",
-  [T("ai","Microsoft/LinkedIn GenAI xong → Cert #1","ai","B1"),
+  {text:"Anthropic Academy: API basics + note 5 khái niệm: Embedding, Vector DB, Chunking, RAG, Hallucination.", prompt:"C1"},
+  {text:"Shadowing 20' · Small-talk 30' (20 câu, 3 bộ — ghi âm 5 câu/bộ).", prompt:"A2"},
+  "Ghi âm 5 câu/bộ + scope Project 1.",
+  [T("anthropic1","Anthropic Academy: API basics","ai"),
+   T("concept2","Note 5 khái niệm: Embedding, Vector DB, Chunking, RAG, Hallucination","ai","C1"),
    T("shadow","Shadowing 20'","english"),
-   T("roleplay","Small talk role-play 30' + thu âm 20 câu","english","A2"),
-   T("scope1","Chốt scope Project 1 (lead-gen + outreach, 1-pager)","ai","B2"),
-   T("tracker","Điền Daily Tracker + Certificate Tracker","track")]),
-
-mkDay(4,"Describe product",
-  {text:"Google AI Essentials — Module 1–2.", prompt:"B1"},
-  {text:"Shadowing 20' · Speaking 30' (tả sản phẩm) · Mock small-talk AI voice + tự chấm.", prompt:"A2"},
-  "Ghi âm small-talk.",
-  [T("ai","Google AI Essentials — Module 1–2","ai","B1"),
-   T("shadow","Shadowing 20'","english"),
-   T("speak","Speaking 30' chủ đề 'describe your product'","english"),
-   T("mock","Mock small-talk AI voice 15' + tự chấm","english","A2"),
+   T("roleplay","Small-talk 30' (20 câu, 3 bộ) — ghi âm 5 câu/bộ","english","A2"),
+   T("scope1","Chốt scope Project 1 (lead-gen + outreach agent)","ai","B2"),
    T("tracker","Điền Daily Tracker","track")]),
 
-mkDay(5,"Fluency",
-  {text:"Google AI Essentials — Module 3–4 + quiz.", prompt:"B1"},
-  {text:"Shadowing 20' · Role-play 'meeting kick-off' 30' · Self-intro bản FINAL.", prompt:"A3"},
-  "intro_final.mp3.",
-  [T("ai","Google AI Essentials — Module 3–4 + quiz","ai","B1"),
-   T("shadow","Shadowing 20'","english"),
-   T("roleplay","Role-play 'meeting kick-off' 30'","english","A3"),
-   T("record","Thu âm self-intro bản FINAL","english","A1"),
-   T("tracker","Điền Daily Tracker","track")]),
-
-mkDay(6,"TEST + BUILD",
-  {text:"Dựng skeleton Project 1 (khung với Claude/n8n).", prompt:"B2"},
-  {text:"Weekly Test: CEFR test lần 2 (so baseline) + tự chấm self-intro/small-talk theo rubric.", prompt:""},
+mkDay(4,"Google Cloud + Weekly Test",
+  {text:"Google Cloud GenAI path — Module 1–2 (2h).", prompt:""},
+  {text:"Weekly Test W1: CEFR test lần 2 (so baseline) + tự chấm intro/small-talk.", prompt:""},
   "Điểm W1 vào tracker.",
-  [T("build1","Dựng skeleton Project 1 (n8n/Claude)","ai","B2"),
-   T("cefr2","CEFR test lần 2 (so baseline)","english"),
-   T("selfscore","Tự chấm self-intro/small-talk theo rubric /10","english"),
-   T("weekreview","Điền Weekly Review W1","track"),
+  [T("gcloud1","Google Cloud GenAI path — Module 1–2 (2h)","ai"),
+   T("cefr2","Weekly Test: CEFR test lần 2 (so baseline)","english"),
+   T("selfscore","Tự chấm intro/small-talk theo rubric /10","english"),
    T("tracker","Điền Daily Tracker","track")]),
 
-mkDay(7,"Review (nhẹ)",
-  {text:"Không có block AI hôm nay — dành thời gian nghỉ và review."},
-  {text:"ELSA drill 30' cho 5 lỗi phát âm dai nhất · Viết Weekly Review.", prompt:""},
+mkDay(5,"Review (nhẹ)",
+  {text:"Nghỉ AI hôm nay."},
+  {text:"ELSA drill 30' (âm partner, based, solutions, both) · Viết Weekly Review W1.", prompt:""},
   "Điều chỉnh W2.",
-  [T("elsa","Drill ELSA 30' cho 5 lỗi phát âm dai nhất","english"),
+  [T("elsa","ELSA drill 30' (partner, based, solutions, both)","english"),
    T("weekreview","Viết Weekly Review W1 — điều chỉnh cho tuần 2","track"),
-   T("rest","Cho phép bản thân nghỉ nửa ngày","track")]),
+   T("tracker","Điền Daily Tracker","track")]),
 
-/* ---------- WEEK 2 — Meeting muscle ---------- */
-mkDay(8,"Status update",
-  {text:"Google AI Essentials xong → Cert #2.", prompt:"B1"},
-  {text:"Shadowing 20' · Mock meeting 30' vai 'status update'.", prompt:"A3"},
-  "Cert #2 (Google AI Essentials).",
-  [T("ai","Google AI Essentials xong → Cert #2","ai","B1"),
+mkDay(6,"Agents tools + concepts",
+  {text:"Hugging Face Agents Course Unit 2 (tools, function calling) + note 5 khái niệm: Function Calling, Agent, MCP, Guardrails, Latency.", prompt:"C1"},
+  {text:"Shadowing 20' · Speaking 30' chủ đề 'describe your product'.", prompt:""},
+  "Note 15/20 khái niệm.",
+  [T("hf3","HF Agents Course — Unit 2 (tools, function calling)","ai"),
+   T("concept3","Note 5 khái niệm: Function Calling, Agent, MCP, Guardrails, Latency","ai","C1"),
    T("shadow","Shadowing 20'","english"),
-   T("meeting","Mock meeting 30' vai 'status update'","english","A3"),
+   T("speak2","Speaking 30' chủ đề 'describe your product'","english"),
+   T("tracker","Điền Daily Tracker","track")]),
+
+mkDay(7,"MCP + đủ 20 khái niệm",
+  {text:"Anthropic Academy: MCP module + note 5 khái niệm cuối: Fine-tuning, Cost-per-call, Multimodal, Inference, Transformer.", prompt:"C1"},
+  {text:"Shadowing 20' · Role-play meeting kick-off.", prompt:"A3"},
+  "Đủ 20/20 khái niệm note xong.",
+  [T("anthropic2","Anthropic Academy: MCP module","ai"),
+   T("concept4","Note 5 khái niệm cuối: Fine-tuning, Cost-per-call, Multimodal, Inference, Transformer","ai","C1"),
+   T("shadow","Shadowing 20'","english"),
+   T("roleplay2","Role-play meeting kick-off","english","A3"),
+   T("tracker","Điền Daily Tracker","track")]),
+
+/* ---------- WEEK 2 (08/07–14/07) — AGENTS TRACK + Meeting muscle ---------- */
+mkDay(8,"DeepLearning.AI Agents",
+  {text:"DeepLearning.AI Agents course — 50%.", prompt:""},
+  {text:"Mock meeting 30' (status update) + Shadowing 20'.", prompt:"A3"},
+  "—",
+  [T("dlai1","DeepLearning.AI Agents course — 50%","ai"),
+   T("meeting","Mock meeting 30' (status update)","english","A3"),
+   T("shadow","Shadowing 20'","english"),
+   T("tracker","Điền Daily Tracker","track")]),
+
+mkDay(9,"DL.AI Agents xong + Cert",
+  {text:"DeepLearning.AI Agents — hoàn thành + lấy Cert.", prompt:""},
+  {text:"Mock meeting 30' (hỏi requirement) + Viết email #1.", prompt:"A3"},
+  "Cert DL.AI.",
+  [T("dlai2","DeepLearning.AI Agents — hoàn thành + lấy Cert","ai"),
+   T("meeting","Mock meeting 30' (hỏi requirement)","english","A3"),
+   T("email","Viết email #1","english","A4"),
    T("tracker","Điền Daily Tracker + Certificate Tracker","track")]),
 
-mkDay(9,"Hỏi requirement",
-  {text:"Build Project 1 (n8n/Claude) — dựng workflow thật.", prompt:"B2"},
-  {text:"Mock meeting 30' vai 'hỏi requirement khách' · Viết email công việc #1.", prompt:"A3"},
-  "email_v1.",
-  [T("build1","Build Project 1 (n8n/Claude)","ai","B2"),
-   T("meeting","Mock meeting 30' vai 'hỏi requirement khách'","english","A3"),
-   T("email","Viết email công việc #1","english","A4"),
+mkDay(10,"API + Postman",
+  {text:"Postman + Anthropic API: gọi thành công, parse JSON, error handling, tính cost.", prompt:""},
+  {text:"Mock meeting 30' (báo tiến độ) + Học 40 từ vựng payments/BD.", prompt:"A3"},
+  "API test pass.",
+  [T("api1","Postman + Anthropic API: gọi thành công, parse JSON, xử lý error, tính cost","ai"),
+   T("meeting","Mock meeting 30' (báo tiến độ)","english","A3"),
+   T("vocab40","40 từ vựng payments/BD","english"),
    T("tracker","Điền Daily Tracker","track")]),
 
-mkDay(10,"Báo tiến độ",
-  {text:"Build Project 1 — tiếp tục dựng node-by-node.", prompt:"B2"},
-  {text:"Mock meeting 30' vai 'báo tiến độ' · Học 40 từ vựng payments/BD (spaced repetition).", prompt:"A3"},
-  "40 từ active.",
-  [T("build1","Build Project 1 — tiếp tục","ai","B2"),
-   T("meeting","Mock meeting 30' vai 'báo tiến độ'","english","A3"),
-   T("vocab40","Học 40 từ vựng payments/BD (spaced repetition)","english"),
-   T("tracker","Điền Daily Tracker","track")]),
-
-mkDay(11,"Đàm phán nhẹ",
-  {text:"Project 1 → deploy lên Netlify."},
-  {text:"Mock meeting 30' (đàm phán nhẹ) · Viết email công việc #2–3.", prompt:"A3"},
-  "Project 1 live.",
-  [T("deploy1","Deploy Project 1 lên Netlify (có link)","ai"),
-   T("meeting","Mock meeting 30' — đàm phán nhẹ","english","A3"),
-   T("email","Viết email công việc #2–3","english","A4"),
-   T("tracker","Điền Daily Tracker","track")]),
-
-mkDay(12,"Tổng hợp",
-  {text:"Chốt scope Project 2 (proposal/RFP generator) — 1-pager.", prompt:"B3"},
-  {text:"Shadowing 20' · Mock meeting tổng hợp (3 vai, quay video).", prompt:"A3"},
-  "Scope Project 2.",
-  [T("scope2","Chốt scope Project 2 (proposal/RFP, 1-pager)","ai","B3"),
-   T("shadow","Shadowing 20'","english"),
-   T("meeting","Mock meeting tổng hợp cả 3 vai — quay video","english","A3"),
-   T("tracker","Điền Daily Tracker","track")]),
-
-mkDay(13,"TEST",
-  {text:"Start build Project 2 (proposal generator).", prompt:"B3"},
-  {text:"Weekly Test: Mock meeting 30' quay video, AI chấm theo rubric.", prompt:"A3"},
+mkDay(11,"Build P1 skeleton",
+  {text:"Build Project 1: agent lead-gen skeleton (n8n + LLM) (3h).", prompt:"B2"},
+  {text:"Weekly Test W2: Mock meeting 30' quay video.", prompt:"A3"},
   "Video + điểm W2.",
-  [T("build2","Start build Project 2","ai","B3"),
-   T("weektest","Weekly Test: Mock meeting 30' quay video + AI chấm","english","A3"),
-   T("linkedin2","Add Cert #2 lên LinkedIn","track"),
-   T("weekreview","Điền Weekly Review W2","track"),
+  [T("p1build1","Build P1: agent lead-gen skeleton (n8n+LLM) (3h)","ai","B2"),
+   T("weektest","Weekly Test: Mock meeting 30' quay video","english","A3"),
    T("tracker","Điền Daily Tracker","track")]),
 
-mkDay(14,"Review",
-  {text:"Không có block AI hôm nay."},
-  {text:"ELSA drill 30' · Viết Weekly Review · Email công việc #4–5.", prompt:"A4"},
-  "Điều chỉnh W3.",
-  [T("elsa","Drill ELSA 30'","english"),
-   T("weekreview","Viết Weekly Review W2 — điều chỉnh cho tuần 3","track"),
-   T("email","Viết email công việc #4–5","english","A4"),
-   T("rest","Nghỉ nửa ngày","track")]),
+mkDay(12,"TEST AI Foundation",
+  {text:"TEST AI Foundation: trả lời miệng 30' về 20 khái niệm (LLM, Transformer, Token, Context Window, Embedding, RAG, Function Calling, Agent, MCP, Fine-tuning, Hallucination, Temperature, System Prompt, Vector DB, Chunking, Latency, Cost-per-call, Guardrails, Multimodal, Inference), mục tiêu ≥90% (2h).", prompt:"C1"},
+  {text:"Viết Weekly Review W2.", prompt:""},
+  "Đạt/rớt Foundation.",
+  [T("foundationtest","TEST AI Foundation: trả lời miệng 30', 20 khái niệm, ≥90%","ai","C1"),
+   T("weekreview","Viết Weekly Review W2","track"),
+   T("tracker","Điền Daily Tracker","track")]),
 
-/* ---------- WEEK 3 — Demo & pitch ---------- */
-mkDay(15,"Prompt eng",
-  {text:"DeepLearning.AI Prompt Engineering — Module 1–2.", prompt:"B1"},
-  {text:"Shadowing 20' · Present sản phẩm 10' bản v1 (quay video).", prompt:""},
+mkDay(13,"Build P1 memory",
+  {text:"Build Project 1: thêm memory + outreach generation.", prompt:"B2"},
+  {text:"Mock meeting 30' + Viết email #2.", prompt:"A3"},
+  "—",
+  [T("p1build2","Build P1: thêm memory + outreach generation","ai","B2"),
+   T("meeting","Mock meeting 30'","english","A3"),
+   T("email2","Viết email #2","english","A4"),
+   T("tracker","Điền Daily Tracker","track")]),
+
+mkDay(14,"P1 hoàn thiện + Prompt test",
+  {text:"P1 hoàn thiện + test 10 prompt cho 10 use case BD khác nhau.", prompt:""},
+  {text:"Mock meeting tổng hợp 30' (3 vai).", prompt:"A3"},
+  "P1 chạy được + Prompt test đạt.",
+  [T("p1build3","P1 hoàn thiện (agent lead-gen + outreach có memory)","ai","B2"),
+   T("prompttest","Test 10 prompt cho 10 use case BD khác nhau — đạt ngay lần đầu ≥80%","ai"),
+   T("meeting","Mock meeting tổng hợp 30' (3 vai)","english","A3"),
+   T("tracker","Điền Daily Tracker","track")]),
+
+/* ---------- WEEK 3 (15/07–21/07) — RAG + Demo & pitch ---------- */
+mkDay(15,"HF Unit 3 (RAG) + thiết kế P2",
+  {text:"Hugging Face Agents Course Unit 3 (RAG) + thiết kế Project 2.", prompt:"B3"},
+  {text:"Present sản phẩm 10' bản v1 (quay video).", prompt:""},
   "present_v1.",
-  [T("ai","DeepLearning.AI Prompt Engineering — Module 1–2","ai","B1"),
-   T("shadow","Shadowing 20'","english"),
+  [T("hf4","HF Agents Course — Unit 3 (RAG)","ai"),
+   T("p2design","Thiết kế Project 2 (proposal/RFP generator + RAG)","ai","B3"),
    T("present","Present sản phẩm 10' bản v1 — quay video","english"),
    T("tracker","Điền Daily Tracker","track")]),
 
-mkDay(16,"Present",
-  {text:"DeepLearning.AI Prompt Engineering xong → Cert #3.", prompt:"B1"},
-  {text:"Present sản phẩm 10' bản v2 (cải thiện) · Q&A simulation sau present.", prompt:""},
-  "Cert #3 (DeepLearning.AI).",
-  [T("ai","DeepLearning.AI Prompt Engineering xong → Cert #3","ai","B1"),
+mkDay(16,"Build P2 — RAG pipeline",
+  {text:"Build Project 2: RAG pipeline (chunk, embed, retrieve) trên hồ sơ thầu/năng lực thật.", prompt:"B3"},
+  {text:"Present sản phẩm 10' bản v2 + Q&A simulation.", prompt:""},
+  "API test chính thức đạt.",
+  [T("p2build1","Build P2: RAG pipeline (chunk, embed, retrieve) trên hồ sơ thầu thật","ai","B3"),
+   T("apitest","API test chính thức đạt (gọi thành công + giải thích cost model)","ai"),
    T("present","Present sản phẩm 10' bản v2 — quay video","english"),
    T("qasim","Q&A simulation sau present","english"),
-   T("tracker","Điền Daily Tracker + Certificate Tracker","track")]),
+   T("tracker","Điền Daily Tracker","track")]),
 
-mkDay(17,"Handle Q",
-  {text:"Anthropic course (Building with Claude / MCP)."},
-  {text:"Present sản phẩm 10' bản v3 · Học 15 câu handle-objection.", prompt:"A5"},
-  "15 câu thuộc.",
-  [T("ai","Anthropic course — Building with Claude/MCP","ai"),
-   T("present","Present sản phẩm 10' bản v3 — quay video","english"),
+mkDay(17,"Build chatbot RAG",
+  {text:"Build Project 2: chatbot RAG + test 20 câu hỏi trên tài liệu.", prompt:"B3"},
+  {text:"Present sản phẩm 10' + Học 15 câu handle-objection.", prompt:"A5"},
+  "—",
+  [T("p2build2","Build P2: chatbot RAG + test 20 câu hỏi trên tài liệu","ai","B3"),
+   T("present","Present sản phẩm 10' — quay video","english"),
    T("objection","Học thuộc 15 câu handle-objection","english","A5"),
    T("tracker","Điền Daily Tracker","track")]),
 
-mkDay(18,"Negotiation",
-  {text:"Build Project 2 (proposal generator).", prompt:"B3"},
-  {text:"Present sản phẩm 10' · Negotiation role-play.", prompt:"A5"},
+mkDay(18,"P2 đạt chuẩn RAG + Deploy",
+  {text:"P2 đạt ≥80%/20 câu → deploy (3h).", prompt:""},
+  {text:"Weekly Test W3: Present 10' quay video + chấm.", prompt:""},
+  "P2 live + điểm W3.",
+  [T("ragtest","RAG test: ≥80% đúng trên 20 câu hỏi test","ai"),
+   T("deploy2","Deploy P2 lên Netlify (có link)","ai"),
+   T("weektest2","Weekly Test: Present 10' quay video + chấm","english"),
+   T("tracker","Điền Daily Tracker","track")]),
+
+mkDay(19,"n8n workflow test",
+  {text:"Test 3 workflow n8n — mỗi cái chạy 10 lần liên tiếp OK + xử lý 1 error case (2h).", prompt:""},
+  {text:"Viết Weekly Review W3.", prompt:""},
+  "n8n test đạt.",
+  [T("n8ntest","Test 3 workflow n8n — 10 lần liên tiếp + 1 error case","ai"),
+   T("weekreview2","Viết Weekly Review W3","track"),
+   T("tracker","Điền Daily Tracker","track")]),
+
+mkDay(20,"Build P3 dashboard",
+  {text:"Build Project 3: dashboard + AI insight.", prompt:"B4"},
+  {text:"Negotiation role-play + Shadowing 20'.", prompt:"A5"},
   "—",
-  [T("build2","Build Project 2 — tiếp tục","ai","B3"),
-   T("present","Present sản phẩm 10' — quay video","english"),
+  [T("p3build1","Build P3: dashboard + AI insight","ai","B4"),
    T("negotiate","Negotiation role-play","english","A5"),
-   T("tracker","Điền Daily Tracker","track")]),
-
-mkDay(19,"Deploy",
-  {text:"Project 2 → deploy · Start Project 3 (data dashboard).", prompt:"B4"},
-  {text:"Shadowing 20' · Present bản tốt nhất (quay video).", prompt:""},
-  "Project 2 live.",
-  [T("deploy2","Deploy Project 2 lên Netlify (có link)","ai"),
-   T("scope3","Chốt scope Project 3 (data dashboard)","ai","B4"),
    T("shadow","Shadowing 20'","english"),
-   T("present","Present bản tốt nhất — quay video","english"),
    T("tracker","Điền Daily Tracker","track")]),
 
-mkDay(20,"TEST",
-  {text:"Build Project 3 (dashboard).", prompt:"B4"},
-  {text:"Weekly Test: Present sản phẩm 10' quay video + tự chấm theo rubric.", prompt:""},
-  "Video + điểm W3.",
-  [T("build3","Build Project 3 (dashboard)","ai","B4"),
-   T("weektest","Weekly Test: Present 10' quay video + tự chấm rubric","english"),
-   T("linkedin3","Add Cert #3 lên LinkedIn","track"),
-   T("weekreview","Điền Weekly Review W3","track"),
+mkDay(21,"P3 data pipeline",
+  {text:"P3 hoàn thiện data pipeline.", prompt:"B4"},
+  {text:"Present bản tốt nhất + Q&A khó.", prompt:""},
+  "—",
+  [T("p3build2","P3 hoàn thiện data pipeline","ai","B4"),
+   T("present2","Present bản tốt nhất + Q&A khó","english"),
    T("tracker","Điền Daily Tracker","track")]),
 
-mkDay(21,"Review",
-  {text:"Không có block AI hôm nay."},
-  {text:"ELSA drill 30' · Viết Weekly Review.", prompt:""},
-  "Điều chỉnh W4.",
-  [T("elsa","Drill ELSA 30'","english"),
-   T("objreview","Ôn lại toàn bộ 15 câu handle-objection","english"),
-   T("weekreview","Viết Weekly Review W3 — điều chỉnh cho tuần 4","track"),
-   T("rest","Nghỉ nửa ngày","track")]),
-
-/* ---------- WEEK 4 — Interview mode ---------- */
-mkDay(22,"Interview khởi động",
-  {text:"AI Agents / n8n course — bắt đầu."},
-  {text:"Mock interview BD 30' — lần 1 · Tự chấm /10.", prompt:"A6"},
-  "Tự chấm /10.",
-  [T("ai","AI Agents/n8n course — bắt đầu","ai"),
-   T("interview","Mock interview BD 30' — lần 1","english","A6"),
-   T("selfscore","Tự chấm mock interview /10","english"),
-   T("tracker","Điền Daily Tracker","track")]),
-
-mkDay(23,"STAR answers",
-  {text:"AI Agents/n8n course xong → Cert #4 (nếu kịp)."},
-  {text:"Mock interview BD 30' — lần 2 (khó hơn, câu hỏi STAR).", prompt:"A6"},
-  "Cert #4 (nếu kịp).",
-  [T("ai","AI Agents/n8n course xong → Cert #4 (nếu kịp)","ai"),
-   T("interview","Mock interview BD 30' — lần 2 (khó hơn)","english","A6"),
+/* ---------- WEEK 4 (22/07–30/07) — Solution Selling + Interview mode ---------- */
+mkDay(22,"P3 deploy + HF cert",
+  {text:"Deploy Project 3 lên Netlify + hoàn thành HF Agents Course (Cert final).", prompt:""},
+  {text:"Mock interview BD 30' — lần 1.", prompt:"A6"},
+  "P3 live + HF cert.",
+  [T("deploy3","Deploy P3 lên Netlify (có link)","ai"),
+   T("hf5","Hoàn thành HF Agents Course — lấy Cert final","ai"),
+   T("interview1","Mock interview BD 30' — lần 1","english","A6"),
    T("tracker","Điền Daily Tracker + Certificate Tracker","track")]),
 
-mkDay(24,"Domain Q",
-  {text:"Đóng gói Project 3 (dashboard)."},
-  {text:"Mock interview BD 30' — lần 3 (câu hỏi domain payments/BD) · Negotiation lương.", prompt:"A6"},
-  "—",
-  [T("ai","Đóng gói Project 3","ai","B4"),
-   T("interview","Mock interview BD 30' — lần 3 (domain payments/BD)","english","A6"),
-   T("negotiate","Negotiation role-play — kịch bản lương","english","A5"),
+mkDay(23,"RAG test chính thức",
+  {text:"RAG test chính thức: 20 câu hỏi, đạt ≥80% + viết architecture note Project 1 (tiếng Anh).", prompt:"C4"},
+  {text:"Mock interview BD 30' — lần 2 (khó hơn).", prompt:"A6"},
+  "RAG đạt.",
+  [T("ragtestfinal","RAG test chính thức: 20 câu hỏi, đạt ≥80%","ai"),
+   T("architecture1","Viết architecture note Project 1 (1 trang tiếng Anh)","ai","C4"),
+   T("interview2","Mock interview BD 30' — lần 2 (khó hơn)","english","A6"),
    T("tracker","Điền Daily Tracker","track")]),
 
-mkDay(25,"Deploy + portfolio",
-  {text:"Project 3 → deploy · Viết portfolio entry Project 1.", prompt:"B5"},
-  {text:"Mock interview BD 30' — lần 4 (mục tiêu tự chấm ≥7/10).", prompt:"A6"},
-  "Project 3 live.",
-  [T("deploy3","Deploy Project 3 lên Netlify (có link)","ai"),
-   T("portfolio1","Viết portfolio entry Project 1","ai","B5"),
-   T("interview","Mock interview BD 30' — lần 4 (mục tiêu ≥7/10)","english","A6"),
+mkDay(24,"Architecture note + GitHub public",
+  {text:"Viết architecture note Project 2 & 3 (tiếng Anh) + public cả 3 repo GitHub.", prompt:"C4"},
+  {text:"Mock interview BD 30' — lần 3 + Negotiation lương.", prompt:"A6"},
+  "3 repo public.",
+  [T("architecture2","Viết architecture note Project 2 & 3 (tiếng Anh)","ai","C4"),
+   T("githubpublic","Public cả 3 repo GitHub (README rõ ràng)","ai"),
+   T("interview3","Mock interview BD 30' — lần 3","english","A6"),
+   T("negotiate2","Negotiation role-play — kịch bản lương","english","A5"),
    T("tracker","Điền Daily Tracker","track")]),
 
-mkDay(26,"Portfolio + LinkedIn",
-  {text:"3 project lên Netlify (rà lại link) · LinkedIn đủ cert + skill.", prompt:"B5"},
-  {text:"Shadowing 20' · Mock với người thật (Cambly/EngVarta nếu xin được), hoặc mock interview BD lần 5.", prompt:"A6"},
-  "Portfolio + LinkedIn xong.",
-  [T("portfolio23","Viết portfolio entry Project 2 & 3","ai","B5"),
-   T("linkedin","Cập nhật LinkedIn: cert + skill + project link","track"),
-   T("shadow","Shadowing 20'","english"),
-   T("interview","Mock với người thật (Cambly/EngVarta) hoặc mock interview lần 5","english","A6"),
+mkDay(25,"Agent test — demo live",
+  {text:"Agent test: demo live 3 agent cho 1 người thật dùng thử (3h).", prompt:""},
+  {text:"Quay video demo mỗi project 3–5 phút bằng tiếng Anh.", prompt:""},
+  "Agent test đạt.",
+  [T("agenttest","Demo live 3 agent cho 1 người thật dùng thử","ai"),
+   T("videodemo","Quay video demo mỗi project 3–5' bằng tiếng Anh","english"),
    T("tracker","Điền Daily Tracker","track")]),
 
-mkDay(27,"MONTHLY TEST",
-  {text:"Không có block AI riêng hôm nay — dồn cho Monthly Test."},
-  {text:"Monthly Test: Mock interview BD 30' full (quay video) + Present 10' + CEFR test cuối.", prompt:"A6"},
-  "So baseline Ngày 1.",
-  [T("finalinterview","Monthly Test: Mock interview BD 30' full — quay video","english","A6"),
-   T("finalpresent","Monthly Test: Present sản phẩm 10' bản tốt nhất","english"),
+mkDay(26,"ROI/TCO case study",
+  {text:"ROI case study: chọn 1 merchant cũ, tính ROI/TCO/Payback cho giải pháp AI (3h).", prompt:"C3"},
+  {text:"Viết Weekly Review tuần 4.", prompt:""},
+  "ROI case xong.",
+  [T("roicase","ROI/TCO case study: 1 merchant cũ, tính ROI/TCO/Payback","ai","C3"),
+   T("weekreview3","Viết Weekly Review tuần 4","track"),
+   T("tracker","Điền Daily Tracker","track")]),
+
+mkDay(27,"Solution Selling pitch",
+  {text:"Solution Selling pitch: Discovery → Demo → Proposal → ROI, 20' tiếng Anh, quay video.", prompt:"C2"},
+  {text:"Trình bày kiến trúc 3 project, 5'/cái, không script — tự chấm ≥7/10.", prompt:""},
+  "Pitch + English test đạt.",
+  [T("pitch","Solution Selling pitch 20' tiếng Anh (Discovery→Demo→Proposal→ROI) — quay video","ai","C2"),
+   T("architecturepresent","Trình bày kiến trúc 3 project, 5'/cái, không script — tự chấm ≥7/10","english"),
+   T("tracker","Điền Daily Tracker","track")]),
+
+mkDay(28,"Portfolio đóng gói + Monthly Test",
+  {text:"Đóng gói Portfolio: GitHub + Notion + video đủ 3 project + cập nhật LinkedIn cert.", prompt:"B5"},
+  {text:"Monthly Test: Mock interview BD 30' full + CEFR test cuối.", prompt:"A6"},
+  "Portfolio public.",
+  [T("portfoliopack","Đóng gói Portfolio: GitHub + Notion + video đủ 3 project + LinkedIn","ai","B5"),
+   T("monthlytest","Monthly Test: Mock interview BD 30' full — quay video","english","A6"),
    T("cefrfinal","CEFR test cuối — so với baseline Ngày 1","english"),
-   T("tracker","Điền Daily Tracker","track")]),
+   T("tracker","Điền Daily Tracker + Certificate Tracker","track")]),
 
-mkDay(28,"Đóng sổ",
-  {text:"Không có block AI hôm nay."},
-  {text:"Monthly Review · Rà CV khớp JD đối tác mục tiêu.", prompt:""},
-  "Quyết định: đủ tự tin apply chưa?",
-  [T("monthreview","Viết Monthly Review đầy đủ (so baseline Ngày 1)","track"),
-   T("cvupdate","Rà CV khớp JD đối tác mục tiêu","track"),
-   T("decision","Quyết định: đủ tự tin apply đối tác chưa?","track"),
-   T("rest","Nghỉ nửa ngày","track")]),
-
-mkDay(29,"Đệm — bù tiến độ",
-  {text:"Rà lại Certificate Tracker / Project Tracker — hoàn thành nốt phần dang dở.", prompt:""},
-  {text:"Luyện lại phần yếu nhất còn lại (mock interview/present chưa đạt).", prompt:""},
+mkDay(29,"Đệm — bù mốc trượt",
+  {text:"Đệm: bù mốc trượt / polish 3 project + cert còn thiếu.", prompt:""},
+  {text:"Luyện phần yếu nhất theo Monthly Review.", prompt:""},
   "—",
-  [T("certcheck","Hoàn thành nốt cert còn thiếu","ai"),
-   T("projectcheck2","Hoàn thiện project chưa deploy","ai"),
-   T("redo","Luyện lại phần yếu nhất (mock interview/present chưa đạt)","english"),
+  [T("catchup","Bù mốc trượt / polish 3 project + cert còn thiếu","ai"),
+   T("weakspot","Luyện phần yếu nhất theo Monthly Review","english"),
    T("tracker","Điền Daily Tracker","track")]),
 
-mkDay(30,"Đệm — chốt & apply",
-  {text:"Publish portfolio (3 project: mô tả, ảnh, link demo). Apply thật nếu đã sẵn sàng.", prompt:"B5"},
-  {text:"LinkedIn final review: đủ 3–4 cert + 3 project + keyword AI/BD khớp JD.", prompt:""},
-  "Portfolio public · LinkedIn hoàn chỉnh · quyết định rõ ràng.",
-  [T("portfoliopub","Publish portfolio 3 project (mô tả, ảnh, link demo)","ai","B5"),
-   T("linkedinfinal","LinkedIn final review — cert + project + keyword","track"),
-   T("decision","Apply thật (nếu sẵn sàng) hoặc lên kế hoạch tháng tiếp theo","track"),
+mkDay(30,"Apply thật",
+  {text:"Apply thật: gửi hồ sơ cho ≥5 JD AI BD (VN/SG remote).", prompt:""},
+  {text:"Nghỉ + ôn lại script interview.", prompt:""},
+  "Hồ sơ đã gửi.",
+  [T("apply","Apply thật: gửi hồ sơ ≥5 JD AI BD (VN/SG remote)","ai"),
+   T("interviewscript","Ôn lại script interview + nghỉ ngơi","english"),
    T("tracker","Điền Daily Tracker + Monthly Review chốt","track")])
 ];
 
@@ -818,12 +869,13 @@ function renderSidebar(){
       var isToday = day.num===cur;
       var active = route.view==="day" && route.num===day.num;
       html += '<div class="nav-day'+(done?" done":"")+(isToday?" today":"")+(active?" active":"")+'" data-day="'+day.num+'">'+
-        '<span class="dot"></span><span>'+dateForDay(day.num)+' · Ngày '+day.num+' ('+day.weekday+')'+(isToday?" · hôm nay":"")+'</span></div>';
+        '<span class="dot"></span><span>'+dateForDay(day.num)+' · Ngày '+day.num+' ('+weekdayForDay(day.num)+')'+(isToday?" · hôm nay":"")+'</span></div>';
     });
     html += '</div></div>';
   }
 
   html += '<div class="sidebar-divider"></div>';
+  html += navItem("skillmatrix","📐","Chuẩn đạt (Skill Matrix)", route.view==="skillmatrix");
   html += navItem("prompts","💬","Thư viện Prompt", route.view==="prompts");
   html += navItem("certs","🎓","Chứng chỉ", route.view==="certs");
   html += navItem("projects","🚀","Project", route.view==="projects");
@@ -929,7 +981,7 @@ function renderDay(num){
 
   var hrs = blockHours(day);
   var html = '<div class="subtitle">Tuần '+day.week+' · '+esc(WEEK_THEME[day.week])+'</div>';
-  html += '<h1>Ngày '+day.num+' ('+day.weekday+') · '+dateForDay(day.num)+' — '+esc(day.theme)+'</h1>';
+  html += '<h1>Ngày '+day.num+' ('+weekdayForDay(day.num)+') · '+dateForDay(day.num)+' — '+esc(day.theme)+'</h1>';
   html += '<div class="bar-track" style="max-width:320px;"><div class="bar-fill green" style="width:'+pct+'%"></div></div>';
   html += '<div class="subtitle" style="margin-top:6px;">'+done+'/'+total+' việc đã xong ('+pct+'%)</div>';
 
@@ -1122,7 +1174,7 @@ function fallbackCopy(text){
 function renderPrompts(){
   var html = '<h1>Thư viện Prompt</h1><div class="subtitle">Copy nguyên văn, dán vào voice mode / chat của Claude, ChatGPT, Gemini…</div>';
   ["Speaking","AI"].forEach(function(group){
-    html += '<h2>'+(group==="Speaking"?"Luyện nói (A1–A6)":"Luyện AI / project (B1–B5)")+'</h2>';
+    html += '<h2>'+(group==="Speaking"?"Luyện nói (A1–A6)":"Luyện AI / project / kỹ năng mới (B1–B5, C1–C4)")+'</h2>';
     Object.keys(PROMPTS).forEach(function(pid){
       var p = PROMPTS[pid];
       if(p.group!==group) return;
@@ -1135,6 +1187,45 @@ function renderPrompts(){
   document.querySelectorAll("[data-copy-id]").forEach(function(btn){
     btn.addEventListener("click", function(){ copyText(PROMPTS[this.getAttribute("data-copy-id")].text); });
   });
+}
+
+/* ============================= RENDER: SKILL MATRIX ============================= */
+
+function renderSkillMatrix(){
+  var html = '<h1>Chuẩn đạt (Skill Matrix) — v2</h1><div class="subtitle">Lịch trình "v2 — Phương án C": nặng đô hơn, AI block chuyển sang Agents track chuẩn quốc tế từ Tuần 2. Đây là bảng chuẩn để đối chiếu, nguyên văn từ kế hoạch.</div>';
+
+  html += '<h2>Bảng chuẩn đạt (10 kỹ năng)</h2><div class="card"><div style="overflow-x:auto;"><table class="simple">'+
+    '<tr><th>Skill</th><th>Tiêu chuẩn đạt</th><th>Cách test</th><th>Deadline</th></tr>'+
+    SKILL_MATRIX.map(function(s){
+      return '<tr><td><b>'+esc(s.skill)+'</b></td><td>'+esc(s.standard)+'</td><td>'+esc(s.test)+'</td><td>'+esc(s.deadline)+'</td></tr>';
+    }).join("")+
+    '</table></div></div>';
+
+  html += '<h2>Course Stack</h2><div class="card"><div style="overflow-x:auto;"><table class="simple">'+
+    '<tr><th>Course</th><th>Provider</th><th>Cert/Badge</th><th>Vì sao</th></tr>'+
+    COURSE_STACK.map(function(c){
+      return '<tr><td><b>'+esc(c.name)+'</b></td><td>'+esc(c.provider)+'</td><td>'+esc(c.cert)+'</td><td>'+esc(c.why)+'</td></tr>';
+    }).join("")+
+    '</table></div>'+
+    '<p style="color:var(--text-light);font-size:13px;margin-top:10px;margin-bottom:0;"><b>3 Project</b> (giữ đề bài, nâng chuẩn đóng gói): P1 Lead-gen + Outreach Agent (có memory) · P2 Proposal/RFP Generator + RAG · P3 Sales/POS Dashboard + AI insight — mỗi cái: GitHub + Notion + video + architecture note 1 trang tiếng Anh.</p>'+
+    '</div>';
+
+  html += '<h2>Rule điều chỉnh cuối tuần</h2><div class="card"><ul style="margin:0;padding-left:20px;">'+
+    WEEKLY_ADJUST_RULES.map(function(r){ return '<li style="margin-bottom:6px;">'+esc(r)+'</li>'; }).join("")+
+    '</ul></div>';
+
+  html += '<h2>KPI chốt 30 ngày</h2><div class="card"><ol style="margin:0;padding-left:20px;">'+
+    FINAL_KPIS.map(function(k){ return '<li style="margin-bottom:6px;">'+esc(k)+'</li>'; }).join("")+
+    '</ol></div>';
+
+  html += '<h2>Checklist mỗi ngày</h2><div class="card"><ul style="margin:0;padding-left:20px;">'+
+    '<li style="margin-bottom:6px;">AI block: xong mục tiêu ngày (course % / project milestone / test)</li>'+
+    '<li style="margin-bottom:6px;">English: shadowing ≥20\' + bài nói theo chủ đề, CÓ THU ÂM THẬT trên máy</li>'+
+    '<li style="margin-bottom:6px;">5 từ/khái niệm mới vào deck</li>'+
+    '<li style="margin-bottom:6px;">Tick tracker (app này)</li>'+
+    '</ul><p style="color:var(--text-light);font-size:13px;margin:10px 0 0;"><b>Thiếu thu âm = ngày đó CHƯA ĐẠT. Không thương lượng.</b></p></div>';
+
+  document.getElementById("main").innerHTML = html;
 }
 
 /* ============================= RENDER: CERTS ============================= */
@@ -1321,6 +1412,7 @@ function render(){
   renderSidebar();
   var route = currentRoute();
   if(route.view==="day") renderDay(route.num);
+  else if(route.view==="skillmatrix") renderSkillMatrix();
   else if(route.view==="prompts") renderPrompts();
   else if(route.view==="certs") renderCerts();
   else if(route.view==="projects") renderProjects();
